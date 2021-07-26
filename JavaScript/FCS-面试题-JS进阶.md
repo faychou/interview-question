@@ -27,6 +27,27 @@ Array.prototype.concat.apply([], arrayLike)
 
 
 
+#### Promise 图片懒加载
+
+``` jsx
+function loadImg (src) {
+    var promise = new Promise(function (resolve, reject) {
+        var img = document.createElement('img')
+        img.onload = function () {
+            resolve(img)
+        }
+        img.onerror = function () {
+            reject('图片加载失败')
+        }
+        img.scr = src
+    })
+    retrun promise
+}
+var result = loadImg('www.faychou.com')
+```
+
+
+
 #### ES6 Modules 相对于 CommonJS 的优势是什么？
 
 
