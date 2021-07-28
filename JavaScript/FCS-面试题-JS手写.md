@@ -2,6 +2,8 @@
 
 #### 实现一个 compose 函数
 
+compose 函数的作用就是组合函数，依次组合传入的函数，后一个函数作为前一个函数的参数，最后一个函数可以接受多个参数，前面的函数只能接受单个参数（该参数是后一个的返回值传给前一个）。
+
 ``` js
 // 用法如下:
 function fn1(x) {
@@ -16,8 +18,8 @@ function fn3(x) {
 function fn4(x) {
   return x + 4;
 }
-const a = compose(fn1, fn2, fn3, fn4);
-console.log(a(1)); // 1+4+3+2+1=11
+const a = compose(fn1, fn2, fn3, fn4); // 组合后结果：(...args) => f4(f3(f2(f1(...args))))
+console.log(a(1)); // 11
 ```
 
 实现方案：
@@ -31,6 +33,22 @@ function compose(...fn) {
       (...args) =>
         pre(cur(...args))
   );
+}
+
+// 迭代的方式实现
+function compose(...funcs) {
+  let length = funcs.length;
+
+  return function(...arg) {
+    let index = length - 1,
+        
+    // result 用来记录每次函数执行的返回值，每次都会更新，直到所有函数都执行完
+    result = length > 0 ? funcs[index].apply(this,arg) : arg; // 注意 arg 为数组，要用 apply
+    while(--index >=0 ) {
+      result = funcs[index].call(this,result);
+    }
+    return result;
+  }
 }
 ```
 
@@ -351,6 +369,34 @@ Function.prototype.myBind = function (context, ...args) {
 #### 深拷贝（考虑到复制 Symbol 类型）
 
 ``` js
+// 方式1：简单
+function deepClone(obj = {}){
+  if(typeof obj !== 'object' || obj == null) {
+    // obj 是 null，或者不是对象情况，直接返回
+    return obj;
+  }
+    
+  // 初始化返回结果
+  let result;
+  if(obj instanceof Array) {
+    result = [];
+  } else {
+    result = {};
+  }
+    
+  for (let key in obj) {
+    // 保证 Key 不是原型的属性
+    if(obj.hasOwnProperty(key)) {
+      // 递归调用
+      result[key] = deepClone(obj[key]);
+    }
+  }
+
+  // 返回结果
+  return result;
+}
+
+// 方式2
 function isObject(val) {
   return typeof val === "object" && val !== null;
 }
@@ -362,6 +408,8 @@ function deepClone(obj, hash = new WeakMap()) {
   }
   let target = Array.isArray(obj) ? [] : {};
   hash.set(obj, target);
+    
+  // 静态方法 Reflect.ownKeys() 返回一个由目标对象自身的属性键组成的数组
   Reflect.ownKeys(obj).forEach((item) => {
     if (isObject(obj[item])) {
       target[item] = deepClone(obj[item], hash);
@@ -533,7 +581,7 @@ window.addEventListener(
   "scroll",
   debounce(() => {
     console.log(111);
-  }, 1000)
+  }, 1000);
 );
 
 // 节流

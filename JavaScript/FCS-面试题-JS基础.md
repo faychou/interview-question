@@ -176,40 +176,13 @@ DOM事件流分为三个阶段，一个是捕获节点，一个是处于目标�
 
 闭包不要乱用，变量会常驻内容，不会释放。
 
+
+
 #### `new Object()` 和 `Object.create()` 的区别。
 
 * `{}` 等同 `new Object()`，原型为 `Object.prototype`；
 * ``Object.create(null)` 没有原型；
 * ``Object.create({...})` 指定原型。 
-
-#### 手写节流 `throttle`，防抖 `debounce` 函数。
-
-``` js
-// 防抖 debounce
-function debounce(fn, delay = 500) {
-  let timer = null;
-  return function() {
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      fn.apply(this, arguments);
-    }, delay);
-  };
-}
-
-// 节流 throttle
-function throttle(fn, delay = 100) {
-  let timer = null
-  return function() {
-    if(timer) {
-      return;
-    }
-    timer = setTimeout(() => {
-      fn.applay(this, arguments);
-      timer = null;
-    }, delay);
-  };
-}
-```
 
 
 
