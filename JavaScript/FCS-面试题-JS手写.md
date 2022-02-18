@@ -1,5 +1,83 @@
 # 面试题-JS手写
 
+#### 查找字符串中出现最多的字符和个数
+
+例: abbcccddddd -> 字符最多的是d，出现了5次
+
+``` js
+let str = "abcabcabcbbccccc";
+let num = 0;
+let char = '';
+
+ // 使其按照一定的次序排列
+str = str.split('').sort().join('');
+// "aaabbbbbcccccccc"
+
+// 定义正则表达式
+let re = /(\w)\1+/g;
+
+// 正则表达式中每一个括号是一个分组 $0-$9 代表的分组匹配的内容
+str.replace(re,($0,$1) => {
+    if(num < $0.length){
+        num = $0.length;
+        char = $1;        
+    }
+});
+console.log(`字符最多的是${char}，出现了${num}次`);
+```
+
+
+
+#### 实现千位分隔符
+
+``` js
+// 保留三位小数
+parseToMoney(1234.56); // return '1,234.56'
+parseToMoney(123456789); // return '123,456,789'
+parseToMoney(1087654.321); // return '1,087,654.321'
+
+
+function parseToMoney(num) {
+  num = parseFloat(num.toFixed(3));
+  let [integer, decimal] = String.prototype.split.call(num, '.');
+  integer = integer.replace(/\d(?=(\d{3})+$)/g, '$&,');
+  return integer + '.' + (decimal ? decimal : '');
+}
+```
+
+
+
+#### 字符串查找
+
+请使用最基本的遍历来实现判断字符串 a 是否被包含在字符串 b 中，并返回第一次出现的位置（找不到返回 -1）。
+
+``` js
+a='34';b='1234567'; // 返回 2
+a='35';b='1234567'; // 返回 -1
+a='355';b='12354355'; // 返回 5
+isContain(a,b);
+
+// 实现
+function isContain(a, b) {
+  for (let i in b) {
+    if (a[0] === b[i]) {
+      let tmp = true;
+      for (let j in a) {
+        if (a[j] !== b[~~i + ~~j]) {
+          tmp = false;
+        }
+      }
+      if (tmp) {
+        return i;
+      }
+    }
+  }
+  return -1;
+}
+```
+
+
+
 #### 实现一个 compose 函数
 
 compose 函数的作用就是组合函数，依次组合传入的函数，后一个函数作为前一个函数的参数，最后一个函数可以接受多个参数，前面的函数只能接受单个参数（该参数是后一个的返回值传给前一个）。
@@ -133,6 +211,142 @@ class EventEmitter {
 // event.emit("dbClick");
 // event.emit("dbClick");
 
+```
+
+
+
+### 实现一个 EventMitter 类
+
+event bus既是node中各个模块的基石，又是前端组件通信的依赖手段之一，同时涉及了订阅-发布设计模式，是非常重要的基础。
+
+``` js
+// 简单版
+class EventEmeitter {
+  constructor() {
+    this._events = this._events || new Map(); // 储存事件/回调键值对
+    this._maxListeners = this._maxListeners || 10; // 设立监听上限
+  }
+}
+
+
+// 触发名为type的事件
+EventEmeitter.prototype.emit = function(type, ...args) {
+  let handler;
+  // 从储存事件键值对的this._events中获取对应事件回调函数
+  handler = this._events.get(type);
+  if (args.length > 0) {
+    handler.apply(this, args);
+  } else {
+    handler.call(this);
+  }
+  return true;
+};
+
+// 监听名为type的事件
+EventEmeitter.prototype.addListener = function(type, fn) {
+  // 将type事件以及对应的fn函数放入this._events中储存
+  if (!this._events.get(type)) {
+    this._events.set(type, fn);
+  }
+};
+
+
+// 面试版
+class EventEmeitter {
+  constructor() {
+    this._events = this._events || new Map(); // 储存事件/回调键值对
+    this._maxListeners = this._maxListeners || 10; // 设立监听上限
+  }
+}
+
+// 触发名为type的事件
+EventEmeitter.prototype.emit = function(type, ...args) {
+  let handler;
+  // 从储存事件键值对的this._events中获取对应事件回调函数
+  handler = this._events.get(type);
+  if (args.length > 0) {
+    handler.apply(this, args);
+  } else {
+    handler.call(this);
+  }
+  return true;
+};
+
+// 监听名为type的事件
+EventEmeitter.prototype.addListener = function(type, fn) {
+  // 将type事件以及对应的fn函数放入this._events中储存
+  if (!this._events.get(type)) {
+    this._events.set(type, fn);
+  }
+};
+
+// 触发名为type的事件
+EventEmeitter.prototype.emit = function(type, ...args) {
+  let handler;
+  handler = this._events.get(type);
+  if (Array.isArray(handler)) {
+    // 如果是一个数组说明有多个监听者,需要依次此触发里面的函数
+    for (let i = 0; i < handler.length; i++) {
+      if (args.length > 0) {
+        handler[i].apply(this, args);
+      } else {
+        handler[i].call(this);
+      }
+    }
+  } else {
+    // 单个函数的情况我们直接触发即可
+    if (args.length > 0) {
+      handler.apply(this, args);
+    } else {
+      handler.call(this);
+    }
+  }
+
+  return true;
+};
+
+// 监听名为type的事件
+EventEmeitter.prototype.addListener = function(type, fn) {
+  const handler = this._events.get(type); // 获取对应事件名称的函数清单
+  if (!handler) {
+    this._events.set(type, fn);
+  } else if (handler && typeof handler === "function") {
+    // 如果handler是函数说明只有一个监听者
+    this._events.set(type, [handler, fn]); // 多个监听者我们需要用数组储存
+  } else {
+    handler.push(fn); // 已经有多个监听者,那么直接往数组里push函数即可
+  }
+};
+
+EventEmeitter.prototype.removeListener = function(type, fn) {
+  const handler = this._events.get(type); // 获取对应事件名称的函数清单
+
+  // 如果是函数,说明只被监听了一次
+  if (handler && typeof handler === "function") {
+    this._events.delete(type, fn);
+  } else {
+    let postion;
+    // 如果handler是数组,说明被监听多次要找到对应的函数
+    for (let i = 0; i < handler.length; i++) {
+      if (handler[i] === fn) {
+        postion = i;
+      } else {
+        postion = -1;
+      }
+    }
+    // 如果找到匹配的函数,从数组中清除
+    if (postion !== -1) {
+      // 找到数组对应的位置,直接清除此回调
+      handler.splice(postion, 1);
+      // 如果清除后只有一个函数,那么取消数组,以函数形式保存
+      if (handler.length === 1) {
+        this._events.set(type, handler[0]);
+      }
+    } else {
+      return this;
+    }
+  }
+};
 ```
 
 
@@ -366,6 +580,23 @@ Function.prototype.myBind = function (context, ...args) {
 
 
 
+### 模拟Object.create
+
+Object.create()方法创建一个新对象，使用现有的对象来提供新创建的对象的__proto__。
+
+``` js
+// 模拟 Object.create
+
+function create(proto) {
+  function F() {}
+  F.prototype = proto;
+
+  return new F();
+}
+```
+
+
+
 #### 深拷贝（考虑到复制 Symbol 类型）
 
 ``` js
@@ -427,6 +658,90 @@ function deepClone(obj, hash = new WeakMap()) {
 // };
 // var obj2 = deepClone(obj1);
 // console.log(obj1);
+
+
+// 面试版
+/**
+ * deep clone
+ * @param  {[type]} parent object 需要进行克隆的对象
+ * @return {[type]}        深克隆后的对象
+ */
+const clone = parent => {
+  // 判断类型
+  const isType = (obj, type) => {
+    if (typeof obj !== "object") return false;
+    const typeString = Object.prototype.toString.call(obj);
+    let flag;
+    switch (type) {
+      case "Array":
+        flag = typeString === "[object Array]";
+        break;
+      case "Date":
+        flag = typeString === "[object Date]";
+        break;
+      case "RegExp":
+        flag = typeString === "[object RegExp]";
+        break;
+      default:
+        flag = false;
+    }
+    return flag;
+  };
+
+  // 处理正则
+  const getRegExp = re => {
+    var flags = "";
+    if (re.global) flags += "g";
+    if (re.ignoreCase) flags += "i";
+    if (re.multiline) flags += "m";
+    return flags;
+  };
+  // 维护两个储存循环引用的数组
+  const parents = [];
+  const children = [];
+
+  const _clone = parent => {
+    if (parent === null) return null;
+    if (typeof parent !== "object") return parent;
+
+    let child, proto;
+
+    if (isType(parent, "Array")) {
+      // 对数组做特殊处理
+      child = [];
+    } else if (isType(parent, "RegExp")) {
+      // 对正则对象做特殊处理
+      child = new RegExp(parent.source, getRegExp(parent));
+      if (parent.lastIndex) child.lastIndex = parent.lastIndex;
+    } else if (isType(parent, "Date")) {
+      // 对Date对象做特殊处理
+      child = new Date(parent.getTime());
+    } else {
+      // 处理对象原型
+      proto = Object.getPrototypeOf(parent);
+      // 利用Object.create切断原型链
+      child = Object.create(proto);
+    }
+
+    // 处理循环引用
+    const index = parents.indexOf(parent);
+
+    if (index != -1) {
+      // 如果父数组存在本对象,说明之前已经被引用过,直接返回此对象
+      return children[index];
+    }
+    parents.push(parent);
+    children.push(child);
+
+    for (let i in parent) {
+      // 递归
+      child[i] = _clone(parent[i]);
+    }
+
+    return child;
+  };
+  return _clone(parent);
+};
 ```
 
 
@@ -454,24 +769,16 @@ function myInstanceof(left, right) {
 柯里化（Currying），又称部分求值（Partial Evaluation），是把接受多个参数的函数变换成接受一个单一参数（最初函数的第一个参数）的函数，并且返回接受余下的参数而且返回结果的新函数的技术。核心思想是把多参数传入的函数拆成单参数（或部分）函数，内部再返回调用下一个单参数（或部分）函数，依次处理剩余的参数。
 
 ``` js
-function currying(fn, ...args) {
-  const length = fn.length;
-  let allArgs = [...args];
-  const res = (...newArgs) => {
-    allArgs = [...allArgs, ...newArgs];
-    if (allArgs.length === length) {
-      return fn(...allArgs);
-    } else {
-      return res;
+var currying = function(fn) {
+    // args 获取第一个方法内的全部参数
+    var args = Array.prototype.slice.call(arguments, 1)
+    return function() {
+        // 将后面方法里的全部参数和 args 进行合并
+        var newArgs = args.concat(Array.prototype.slice.call(arguments))
+        // 把合并后的参数通过 apply 作为 fn 的参数并执行
+        return fn.apply(this, newArgs)
     }
-  };
-  return res;
 }
-
-// 用法如下：
-// const add = (a, b, c) => a + b + c;
-// const a = currying(add, 1);
-// console.log(a(2,3))
 ```
 
 
@@ -562,7 +869,8 @@ function LazyMan(name) {
 #### 防抖节流
 
 ``` js
-// 防抖
+// 防抖：在事件被触发n秒后再执行回调，如果在这n秒内又被触发，则重新计时
+// 适用场景：防止按钮多次提交、服务端验证场景（搜索联想词）
 function debounce(fn, delay = 300) {
   //默认300毫秒
   let timer;
@@ -584,8 +892,9 @@ window.addEventListener(
   }, 1000);
 );
 
-// 节流
-// 设置一个标志
+
+// 节流：规定在一个单位时间内，只能触发一次函数。如果这个单位时间内触发多次函数，只有一次生效
+// 适用场景：拖拽场景、缩放场景、动画场景
 function throttle(fn, delay) {
   let flag = true;
   return () => {
@@ -801,6 +1110,183 @@ class Mypromise {
 //       console.log(err);
 //     }
 //   );
+
+
+// 另一版
+var PromisePolyfill = (function () {
+  // 和reject不同的是resolve需要尝试展开thenable对象
+  function tryToResolve (value) {
+    if (this === value) {
+    // 主要是防止下面这种情况
+    // let y = new Promise(res => setTimeout(res(y)))
+      throw TypeError('Chaining cycle detected for promise!')
+    }
+
+    // 根据规范2.32以及2.33 对对象或者函数尝试展开
+    // 保证S6之前的 polyfill 也能和ES6的原生promise混用
+    if (value !== null &&
+      (typeof value === 'object' || typeof value === 'function')) {
+      try {
+      // 这里记录这次then的值同时要被try包裹
+      // 主要原因是 then 可能是一个getter, 也也就是说
+      //   1. value.then可能报错
+      //   2. value.then可能产生副作用(例如多次执行可能结果不同)
+        var then = value.then
+
+        // 另一方面, 由于无法保证 then 确实会像预期的那样只调用一个onFullfilled / onRejected
+        // 所以增加了一个flag来防止resolveOrReject被多次调用
+        var thenAlreadyCalledOrThrow = false
+        if (typeof then === 'function') {
+        // 是thenable 那么尝试展开
+        // 并且在该thenable状态改变之前this对象的状态不变
+          then.bind(value)(
+          // onFullfilled
+            function (value2) {
+              if (thenAlreadyCalledOrThrow) return
+              thenAlreadyCalledOrThrow = true
+              tryToResolve.bind(this, value2)()
+            }.bind(this),
+
+            // onRejected
+            function (reason2) {
+              if (thenAlreadyCalledOrThrow) return
+              thenAlreadyCalledOrThrow = true
+              resolveOrReject.bind(this, 'rejected', reason2)()
+            }.bind(this)
+          )
+        } else {
+        // 拥有then 但是then不是一个函数 所以也不是thenable
+          resolveOrReject.bind(this, 'resolved', value)()
+        }
+      } catch (e) {
+        if (thenAlreadyCalledOrThrow) return
+        thenAlreadyCalledOrThrow = true
+        resolveOrReject.bind(this, 'rejected', e)()
+      }
+    } else {
+    // 基本类型 直接返回
+      resolveOrReject.bind(this, 'resolved', value)()
+    }
+  }
+
+  function resolveOrReject (status, data) {
+    if (this.status !== 'pending') return
+    this.status = status
+    this.data = data
+    if (status === 'resolved') {
+      for (var i = 0; i < this.resolveList.length; ++i) {
+        this.resolveList[i]()
+      }
+    } else {
+      for (i = 0; i < this.rejectList.length; ++i) {
+        this.rejectList[i]()
+      }
+    }
+  }
+
+  function Promise (executor) {
+    if (!(this instanceof Promise)) {
+      throw Error('Promise can not be called without new !')
+    }
+
+    if (typeof executor !== 'function') {
+    // 非标准 但与Chrome谷歌保持一致
+      throw TypeError('Promise resolver ' + executor + ' is not a function')
+    }
+
+    this.status = 'pending'
+    this.resolveList = []
+    this.rejectList = []
+
+    try {
+      executor(tryToResolve.bind(this), resolveOrReject.bind(this, 'rejected'))
+    } catch (e) {
+      resolveOrReject.bind(this, 'rejected', e)()
+    }
+  }
+
+  Promise.prototype.then = function (onFullfilled, onRejected) {
+  // 返回值穿透以及错误穿透, 注意错误穿透用的是throw而不是return，否则的话
+  // 这个then返回的promise状态将变成resolved即接下来的then中的onFullfilled
+  // 会被调用, 然而我们想要调用的是onRejected
+    if (typeof onFullfilled !== 'function') {
+      onFullfilled = function (data) {
+        return data
+      }
+    }
+    if (typeof onRejected !== 'function') {
+      onRejected = function (reason) {
+        throw reason
+      }
+    }
+
+    var executor = function (resolve, reject) {
+      setTimeout(function () {
+        try {
+        // 拿到对应的handle函数处理this.data
+        // 并以此为依据解析这个新的Promise
+          var value = this.status === 'resolved'
+            ? onFullfilled(this.data)
+            : onRejected(this.data)
+          resolve(value)
+        } catch (e) {
+          reject(e)
+        }
+      }.bind(this))
+    }
+
+    // then 接受两个函数返回一个新的Promise
+    // then 自身的执行永远异步与onFullfilled/onRejected的执行
+    if (this.status !== 'pending') {
+      return new Promise(executor.bind(this))
+    } else {
+    // pending
+      return new Promise(function (resolve, reject) {
+        this.resolveList.push(executor.bind(this, resolve, reject))
+        this.rejectList.push(executor.bind(this, resolve, reject))
+      }.bind(this))
+    }
+  }
+
+  // for prmise A+ test
+  Promise.deferred = Promise.defer = function () {
+    var dfd = {}
+    dfd.promise = new Promise(function (resolve, reject) {
+      dfd.resolve = resolve
+      dfd.reject = reject
+    })
+    return dfd
+  }
+
+  // for prmise A+ test
+  if (typeof module !== 'undefined') {
+    module.exports = Promise
+  }
+
+  return Promise
+})()
+
+PromisePolyfill.all = function (promises) {
+  return new Promise((resolve, reject) => {
+    const result = []
+    let cnt = 0
+    for (let i = 0; i < promises.length; ++i) {
+      promises[i].then(value => {
+        cnt++
+        result[i] = value
+        if (cnt === promises.length) resolve(result)
+      }, reject)
+    }
+  })
+}
+
+PromisePolyfill.race = function (promises) {
+  return new Promise((resolve, reject) => {
+    for (let i = 0; i < promises.length; ++i) {
+      promises[i].then(resolve, reject)
+    }
+  })
+}
 ```
 
 
@@ -967,5 +1453,164 @@ function render(template, data) {
   });
   return computed;
 }
+```
+
+
+
+### 解析 URL Params 为对象
+
+``` js
+let url = 'http://www.domain.com/?user=anonymous&id=123&id=456&city=%E5%8C%97%E4%BA%AC&enabled';
+parseParam(url)
+/* 结果
+{ user: 'anonymous',
+  id: [ 123, 456 ], // 重复出现的 key 要组装成数组，能被转成数字的就转成数字类型
+  city: '北京', // 中文需解码
+  enabled: true, // 未指定值得 key 约定为 true
+}
+*/
+
+function parseParam(url) {
+  const paramsStr = /.+\?(.+)$/.exec(url)[1]; // 将 ? 后面的字符串取出来
+  const paramsArr = paramsStr.split('&'); // 将字符串以 & 分割后存到数组中
+  let paramsObj = {};
+  // 将 params 存到对象中
+  paramsArr.forEach(param => {
+    if (/=/.test(param)) { // 处理有 value 的参数
+      let [key, val] = param.split('='); // 分割 key 和 value
+      val = decodeURIComponent(val); // 解码
+      val = /^\d+$/.test(val) ? parseFloat(val) : val; // 判断是否转为数字
+
+      if (paramsObj.hasOwnProperty(key)) { // 如果对象有 key，则添加一个值
+        paramsObj[key] = [].concat(paramsObj[key], val);
+      } else { // 如果对象没有这个 key，创建 key 并设置值
+        paramsObj[key] = val;
+      }
+    } else { // 处理没有 value 的参数
+      paramsObj[param] = true;
+    }
+  })
+
+  return paramsObj;
+}
+```
+
+
+
+#### 数组排序
+
+有一个数组，如下，目前数组里面的字符串顺序是打乱的，要求是每个字符串首先要按前面的字母A-Z的顺序排，如果字母一样，汉字就按 东-南-西-北的顺序排。
+
+例：[‘A华东’, ‘A华南’, ‘A华西’, ‘A华北’, ‘B华东’, ‘B华南’, ‘C华东’, ‘C华北’]
+
+``` js
+let area = ['A华北', 'A华南', 'B华南', 'A华东', 'B华东', 'A华西', 'C华北', 'C华东'];
+
+function name(area) { // 形参接收传入的数组
+    let arr = []; // 新建一个数组用来放排序后的字符串
+    area.forEach(item => { // 遍历数组
+        let word = item[0]; // 拿到每个字符串的下标0，就可以拿到每个字符串前面的大写字母，放到一个变量里面存起来
+
+        let number = ''; // 由于汉字之间不能比较大小，所以我们建一个变量，用来存，“东，南，西，北的赋值”
+        if (item.indexOf("东") != -1) { // 去数组中查找，判断，如果数组中有带 “东”字的，并且不等于-1，number 就等于0，下面判断同理，查找到对应的字，并附上相应的值，方便于后面，进行判断排序。
+            number = 0;
+        } else if (item.indexOf("南") != -1) {
+            number = 1;
+        } else if (item.indexOf("西") != -1) {
+            number = 2;
+        } else {
+            number = 3;
+        }
+        arr.push({ word, number, str: item }); // 把拿到的数据，按对象的方式添加到，存放的数组里面去。
+
+    });
+    // 排序
+    arr.sort((a, b) => {
+        if (a.word == b.word) { // 判断，如果，前后，字母相等
+            return a.number - b.number; // 就按汉字的数值排
+        } else {
+            a.word - b.word; // 如果，字母不相等，就直接按字母的顺序排
+        }
+    });
+
+    console.log(arr);
+    arr = arr.map(item => item.str); // 再获取到数组中的str，就可以拿到排序后的每个字符串。
+    console.log(arr); // 排序后： ['A华东', 'A华南', 'A华西', 'A华北', 'B华东', 'B华南', 'C华东', 'C华北']
+}
+name(area); // 调用函数,把数组传进去去
+```
+
+
+
+#### 使用原型或class的方式来实现js的链式调用，对数字进行加减乘除
+
+``` js
+class myCalculator {
+    constructor(value) {
+        this.value = value
+    }
+    // 加法
+    add(newValue) {
+        this.value = this.value + newValue
+        return this
+    }
+    // 减法
+    reduce(newValue) {
+        this.value = this.value - newValue
+        return this
+    }
+    // 其他的类似
+}
+const obj = new myCalculator(100)
+obj.add(1).reduce(10)
+console.log(obj.value);
+```
+
+
+
+#### 手写一个简易的`jquery`，考虑插件和扩展性？
+
+```js
+class jQuery {
+    constructor(selector){
+        const result = document.querySelectorAll(selector)
+        const length = result.length
+        for(let i=0; i<length; i++){
+            this[i] = result[i]
+        }
+        this.length = length
+    }
+    get(index){
+        return this[index]
+    }
+    each(fn){
+        for(let i=0;i<this.length;i++){
+            const elem = this[i]
+            fn(elem)
+        }
+    }
+    on(type,fn){
+        return this.each(elem=>{
+            elem.addEventListener(type,fn,false)
+        })
+    }
+}
+
+// 插件的扩展性
+jQuery.prototype.dialog = function(info) {
+    alert(info)
+}
+
+// 复写机制：
+class myJQuery extends jQuery {
+    constructor(selector) {
+        super(selector)
+    }
+    // 扩展自己的方法
+    study(){
+        
+    }
+}
+
 ```
 

@@ -20,6 +20,16 @@
 
 * 断开连接(四次挥手)。
 
+
+
+#### 谈谈你对浏览器缓存的理解？
+
+[实践这一次，彻底搞懂浏览器缓存机制](https://segmentfault.com/a/1190000017962411)
+
+[代码实践带你掌握 强缓存、协商缓存](https://mp.weixin.qq.com/s/pU2gPJPDqo2sF1vp80YAQg)
+
+
+
 #### `cookie` 有哪些属性？
 
 
@@ -47,7 +57,11 @@
 
 
 
-#### 谈谈 BFC。
+#### 谈谈 BFC?
+
+[什么是BFC？看这一篇就够了](https://blog.csdn.net/sinat_36422236/article/details/88763187)
+
+
 
 `BFC`（Block Formatting Contexts）块级格式化上下文，它是页面 `CSS` 视觉渲染的一部分，用于决定块级盒的布局及浮动相互影响范围的一个区域。
 

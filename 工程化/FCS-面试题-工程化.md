@@ -4,6 +4,10 @@
 
 
 
+#### 简单描述一下 Babel 的编译过程？
+
+
+
 #### ESLint 和 Prettier 的区别是什么？两者在一起工作时会产生问题吗？
 
 
@@ -13,6 +17,42 @@
 
 
 #### 如何使用 Vue CLI 3.x 定制一个脚手架？比如内部自动集成了 i18n、 axios、Element UI、路由守卫等？
+
+
+
+#### 前端项目标准？
+
+
+
+#### 组件库集成？组件库建设的目的？
+
+
+
+#### 代码检查规范 eslint？
+
+
+
+#### webpack 插件原理，如何写一个插件？
+
+
+
+#### webpack 的 require 是如何查找依赖的？
+
+
+
+#### webpack 如何实现动态加载？
+
+
+
+#### webpack `treeShaking` 原理，是靠什么才能实现 (ES6 模块的静态导出)。
+
+
+
+#### webpack 的构建原理，loader 和 plugin 的区别。
+
+
+
+#### git 提交规范？
 
 
 
@@ -51,7 +91,7 @@
 
 
 
-#### git reset 和 git revert 有什么区别，该如何选择，回滚后的 <commit-id> 还能找到吗？
+#### git reset 和 git revert 有什么区别，该如何选择，回滚后的 `<commit-id>` 还能找到吗？
 
 - reset是根据来移动HEAD指针，在该次提交点后面的提交记录会丢失。
 
